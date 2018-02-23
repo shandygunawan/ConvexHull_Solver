@@ -1,6 +1,7 @@
 """========================
           IMPORTS
 ========================"""
+from termcolor import colored
 import math
 import matplotlib.pyplot as pyplot
 import random
@@ -39,19 +40,6 @@ def distance_point_line(P,a,b,c):
     except:
         return 0
 
-# return the degree of a point to a line using vector operation
-# a.b = |a| |b| cos(theta)
-def degree_vector(p1,p2,p3):
-    v1 = (p3[0]-p1[0], p3[1]-p1[1])
-    v2 = (p3[0]-p2[0], p3[1]-p2[1])
-    dot = (v1[0]*v2[0]) + (v1[1]*v2[1])
-    cardinal_v1 = math.sqrt( (v1[0]*v1[0]) + (v1[1]*v1[1]) )
-    cardinal_v2 = math.sqrt( (v2[0]*v2[0]) + (v2[1]*v2[1]) )
-    try:
-        return math.degrees(math.acos(dot/(cardinal_v1*cardinal_v2)))
-    except:
-        return 0
-
 # search the farthest point from a given side(left/right) to a line
 def search_farthest_point(po,pn,list):
     # determine the line equation
@@ -75,32 +63,35 @@ def get_left_points(po,pn,list):
 
     return left_points
 
-# get the points located right of a given line
-def get_right_points(po,pn,list):
-    right_points = []
-    for point in list:
-        if (determinant_sarrus(po, pn, point) < 0):
-            right_points.append(point)
-
-    return right_points
-
-
 def quick_hull(Points, po, pn):
+    # get the left points of a given line(po-pn)
     left_points = get_left_points(po,pn,Points)
+
+    # get the farthest point of the left side of a given line
     pmax = search_farthest_point(po,pn,left_points)
+
+    # If there is no more point, pn is a Hull points
     if(pmax == None):
         return [pn]
-    ListHull = quick_hull(left_points, po, pmax)
-    ListHull = ListHull + quick_hull(left_points, pmax, pn)
-    return ListHull
+
+    # Recursively search the left and right side of the triangle
+    upper_points = quick_hull(left_points, po, pmax)
+    lower_points = quick_hull(left_points, pmax, pn)
+    return (upper_points+lower_points)
 
 """========================
-           PRINT
+           MISC
 ========================"""
-def printListOfPoint(list):
-    print("===========================")
-    print("    List of Hull Points    ")
-    print("===========================")
+def init_points(list, n):
+    for i in range(n):
+        x = random.randint(1,100)
+        y = random.randint(1,100)
+        list.append((x,y))
+
+def printListOfPoint(list, type):
+    print("="*22 + "="*len(type))
+    print("    List of {} Points    ".format(type))
+    print("="*22 + "="*len(type))
     for i in range(len(list)):
         print("{:5} | {:1} : {:2}".format(i+1, "X",list[i][0]))
         print("{:5} | {:1} : {:2}".format(" ","Y",list[i][1]))
@@ -134,31 +125,40 @@ def draw_convex(listHull, listPoints):
     pyplot.grid(color='tab:gray', linestyle='--', linewidth=1) # add grid to coordinates
     pyplot.show()
 
+
 """========================
           MAIN
 ========================"""
 if __name__ == "__main__":
 
+    # THE COLOR HIGHLIGHTS ONLY WORKS FOR LINUX TERMINAL AND PYCHARM CONSOLE
+    print(colored("=====================", "blue"))
+    print(colored(" CONVEX HULL SOLVER  ", "red"))
+    print(colored("=====================", "blue"))
+
     # Enter the number of points
     PointCount = int(input("Enter the number of points : "))
 
-    # Randomize x and y for each points and append to list
-    for i in range(PointCount):
-        x = random.randint(1,100)
-        y = random.randint(1,100)
-        entry = (x,y)
-        Points.append(entry)
+    if PointCount <= 1 :
+        print("")
+        print(colored("There is no Convex Hull for <= 1 point", "red"))
+    else:
+        # Randomize x and y for each points and append to list
+        init_points(Points,PointCount)
 
-    # sort points in list ascending based on attribute x,y
-    Points.sort(key=lambda point: (point[0], point[1]))
+        # sort points in list ascending based on attribute x,y
+        Points.sort(key=lambda point: (point[0], point[1]))
 
-    # search convex hull with quick hull
-    HullPoints = quick_hull(Points, Points[0], Points[-1]) # upper convex hull
-    HullPoints = HullPoints + quick_hull(Points, Points[-1], Points[0]) # lower convex hull
+        # search convex hull with quick hull
+        # use line's orientation to scan left and right points
+        upper_points = quick_hull(Points, Points[0], Points[-1]) # upper convex hull
+        lower_points = quick_hull(Points, Points[-1], Points[0]) # lower convex hull
+        HullPoints = upper_points + lower_points
 
-    # print Hull points' coordinate to screen
-    printListOfPoint(HullPoints)
-    print("")
+        # print Hull points' coordinate to screen
+        print("")
+        printListOfPoint(HullPoints, "Hull")
+        print("")
 
-    # draw convex hull to the screen
-    draw_convex(HullPoints, Points)
+        # draw convex hull to the screen
+        draw_convex(HullPoints, Points)
