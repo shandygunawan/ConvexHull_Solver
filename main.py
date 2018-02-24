@@ -5,6 +5,7 @@ from termcolor import colored
 import math
 import matplotlib.pyplot as pyplot
 import random
+import time
 
 """========================
           GLOBAL
@@ -149,16 +150,25 @@ if __name__ == "__main__":
         # sort points in list ascending based on attribute x,y
         Points.sort(key=lambda point: (point[0], point[1]))
 
+        # Start time
+        start_timer = time.clock()
+
         # search convex hull with quick hull
         # use line's orientation to scan left and right points
         upper_points = quick_hull(Points, Points[0], Points[-1]) # upper convex hull
         lower_points = quick_hull(Points, Points[-1], Points[0]) # lower convex hull
         HullPoints = upper_points + lower_points
 
+        # Stop timer
+        stop_timer = time.clock()
+
+        # calculate the time for quick hull execution
+        diff_time = stop_timer - start_timer
+
         # print Hull points' coordinate to screen
         print("")
         printListOfPoint(HullPoints, "Hull")
-        print("")
+        print("The Convex Hull is found by {} milisecond(s)".format(str(round(diff_time*1000,5))))
 
         # draw convex hull to the screen
         draw_convex(HullPoints, Points)
